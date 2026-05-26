@@ -5,6 +5,11 @@ import ListItem from "./ListItem";
 import TotalErrorCount from "./TotalErrorCount";
 
 function NodeList(props) {
+  // Guard against undefined arrays during initial render
+  if (!props.errorArray || !props.nodeArray || !props.ignoredErrorArray) {
+    return null;
+  }
+
   // Reduce the size of our array of errors by removing
   // nodes with no errors on them.
   let filteredErrorArray = props.errorArray.filter(
