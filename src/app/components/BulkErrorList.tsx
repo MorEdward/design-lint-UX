@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from "framer-motion/dist/framer-motion";
 import PreloaderCSS from "./PreloaderCSS";
 
 function BulkErrorList(props) {
+  const [selectedFilters, setSelectedFilters] = useState(new Set(["All"]));
+
   const availableFilters = [
     "All",
     "text",
@@ -13,6 +15,11 @@ function BulkErrorList(props) {
     "radius",
     "effects"
   ];
+
+  // Guard against undefined arrays during initial render
+  if (!props.errorArray || !props.ignoredErrorArray) {
+    return <PreloaderCSS />;
+  }
 
   const ignoredErrorsMap = {};
   props.ignoredErrorArray.forEach(ignoredError => {
@@ -23,7 +30,6 @@ function BulkErrorList(props) {
     ignoredErrorsMap[nodeId].add(ignoredError.value);
   });
 
-  // Filter out ignored errors
   const filteredErrorArray = props.errorArray.filter(item => {
     const nodeId = item.id;
     const ignoredErrorValues = ignoredErrorsMap[nodeId] || new Set();
@@ -58,7 +64,7 @@ function BulkErrorList(props) {
   };
 
   const bulkErrorList = createBulkErrorList(filteredErrorArray, ignoredErrorsMap);
-  bulkErrorList.sort((a, b) => b.count - a.count);
+  bulkErrorList.sort((a, b) => (b as any).count - (a as any).count);
 
   function handleIgnoreChange(error) {
     props.onIgnoredUpdate(error);
@@ -110,8 +116,6 @@ function BulkErrorList(props) {
     }
   }
 
-  const [selectedFilters, setSelectedFilters] = useState(new Set(["All"]));
-
   const handleFilterClick = filter => {
     const newSelectedFilters = new Set(selectedFilters);
     if (filter === "All") {
@@ -133,14 +137,14 @@ function BulkErrorList(props) {
   };
 
   const filteredErrorList = bulkErrorList.filter(error => {
-    return selectedFilters.has("All") || selectedFilters.has(error.type);
+    return selectedFilters.has("All") || selectedFilters.has((error as any).type);
   });
 
   const errorListItems = filteredErrorList.map((error, index) => (
     <BulkErrorListItem
       error={error}
       index={index}
-      key={`${error.node.id}-${error.type}-${index}`}
+      key={`${(error as any).node.id}-${(error as any).type}-${index}`}
       handleIgnoreChange={handleIgnoreChange}
       handleSelectAll={handleSelectAll}
       handleSelect={handleSelect}
