@@ -25,6 +25,7 @@ function BulkErrorList(props) {
   });
 
   const filteredErrorArray = props.errorArray.filter(item => {
+    if (!item.errors) return false;
     const nodeId = item.id;
     const ignoredErrorValues = ignoredErrorsMap[nodeId] || new Set();
     item.errors = item.errors.filter(error => !ignoredErrorValues.has(error.value));
@@ -34,6 +35,7 @@ function BulkErrorList(props) {
   const createBulkErrorList = (errorArray, ignoredErrorsMap) => {
     const bulkErrorMap = {};
     errorArray.forEach(item => {
+      if (!item.errors) return;
       const nodeId = item.id;
       const ignoredErrorValues = ignoredErrorsMap[nodeId] || new Set();
       item.errors = item.errors.filter(error => !ignoredErrorValues.has(error.value));
