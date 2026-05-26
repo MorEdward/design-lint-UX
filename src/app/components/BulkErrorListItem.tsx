@@ -1,10 +1,6 @@
 import * as React from "react";
-import StyleContent from "./StyleContent";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion/dist/framer-motion";
-import Button from "./Button";
-import SuggestionButton from "./SuggestionButton";
-import "../styles/modal.css";
 
 function BulkErrorListItem(props) {
   const ref = useRef();
@@ -20,12 +16,6 @@ function BulkErrorListItem(props) {
   const hideMenu = () => {
     setMenuState(false);
   };
-
-  function handlePanelVisible(boolean, error, index) {
-    props.handlePanelVisible(boolean);
-    props.handleUpdatePanelError(error);
-    props.handleUpdatePanelSuggestion(index);
-  }
 
   function handleIgnoreChange(error) {
     props.handleIgnoreChange(error);
@@ -43,32 +33,8 @@ function BulkErrorListItem(props) {
     props.handleIgnoreAll(error);
   }
 
-  function handleFixAll(error) {
-    props.handleFixAll(error);
-  }
-
   function handleBorderRadiusUpdate(value) {
     props.handleBorderRadiusUpdate(value);
-  }
-
-  function handleCreateStyle(error) {
-    if (error.value !== "Mixed values") {
-      props.handleCreateStyle(error);
-    } else {
-      parent.postMessage(
-        {
-          pluginMessage: {
-            type: "notify-user",
-            message: "Sorry! You can't create styles from mixed fill values."
-          }
-        },
-        "*"
-      );
-    }
-  }
-
-  function handleSuggestion(error, index) {
-    props.handleSuggestion(error, index);
   }
 
   function truncate(string) {
@@ -80,9 +46,6 @@ function BulkErrorListItem(props) {
     enter: { opacity: 1, y: 0, scale: 1 },
     exit: { opacity: 0, y: 12, scale: 1 }
   };
-
-  const hasNoMatches = !error.matches || error.matches.length === 0;
-  const errorTypeIsNotRadius = error.type !== "radius";
 
   return (
     <motion.li
@@ -162,19 +125,6 @@ function BulkErrorListItem(props) {
             >
               Ignore All
             </li>
-            {errorTypeIsNotRadius && hasNoMatches && (
-              <li
-                className="select-menu__list-item select-menu__list-border"
-                key="list-item-create-style"
-                onClick={event => {
-                  event.stopPropagation();
-                  handleCreateStyle(error);
-                  hideMenu();
-                }}
-              >
-                Create Style
-              </li>
-            )}
             {error.type === "radius" && (
               <li
                 className="select-menu__list-item select-menu__list-border"
@@ -218,19 +168,6 @@ function BulkErrorListItem(props) {
             >
               Ignore
             </li>
-            {errorTypeIsNotRadius && hasNoMatches && (
-              <li
-                className="select-menu__list-item select-menu__list-border"
-                key="list-item-create-style"
-                onClick={event => {
-                  event.stopPropagation();
-                  handleCreateStyle(error);
-                  hideMenu();
-                }}
-              >
-                Create Style
-              </li>
-            )}
             {error.type === "radius" && (
               <li
                 className="select-menu__list-item select-menu__list-border"
@@ -247,70 +184,11 @@ function BulkErrorListItem(props) {
           </ul>
         )}
       </div>
-      {error.matches && (
-        <div className="auto-fix-content">
-          <div className="auto-fix-style">
-            <StyleContent
-              style={error.matches[0]}
-              type={error.type.toLowerCase()}
-              error={error}
-            />
-          </div>
-          <Button error={error} applyStyle={handleFixAll} />
-        </div>
-      )}
-      {error.suggestions && (
-        <>
-          <span className="suggestion-label">Suggestions</span>
-          <div className="auto-fix-suggestion">
-            <div
-              className="auto-fix-style auto-fix-style-clickable"
-              onClick={event => {
-                event.stopPropagation();
-                handlePanelVisible(true, error, 0);
-              }}
-            >
-              <StyleContent
-                style={error.suggestions[0]}
-                type={error.type.toLowerCase()}
-                error={error}
-              />
-            </div>
-            <SuggestionButton
-              error={error}
-              index={0}
-              applyStyle={handleSuggestion}
-            />
-          </div>
-          {error.suggestions[1] && (
-            <div className="auto-fix-suggestion suggestion-last">
-              <div
-                className="auto-fix-style auto-fix-style-clickable"
-                onClick={event => {
-                  event.stopPropagation();
-                  handlePanelVisible(true, error, 1);
-                }}
-              >
-                <StyleContent
-                  style={error.suggestions[1]}
-                  type={error.type.toLowerCase()}
-                  error={error}
-                />
-              </div>
-              <SuggestionButton
-                error={error}
-                index={1}
-                applyStyle={handleSuggestion}
-              />
-            </div>
-          )}
-        </>
-      )}
     </motion.li>
   );
 }
 
-// React hook click outside the component
+// React hook for detecting clicks outside the component
 function useOnClickOutside(ref, handler) {
   useEffect(() => {
     const listener = event => {
