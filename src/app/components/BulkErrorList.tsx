@@ -5,16 +5,10 @@ import { AnimatePresence, motion } from "framer-motion/dist/framer-motion";
 import PreloaderCSS from "./PreloaderCSS";
 
 function BulkErrorList(props) {
+  // ALL hooks must be at the top, before any early returns
   const [selectedFilters, setSelectedFilters] = useState(new Set(["All"]));
 
-  const availableFilters = [
-    "All",
-    "text",
-    "fill",
-    "stroke",
-    "radius",
-    "effects"
-  ];
+  const availableFilters = ["All", "text", "fill", "stroke", "radius", "effects"];
 
   // Guard against undefined arrays during initial render
   if (!props.errorArray || !props.ignoredErrorArray) {
@@ -33,9 +27,7 @@ function BulkErrorList(props) {
   const filteredErrorArray = props.errorArray.filter(item => {
     const nodeId = item.id;
     const ignoredErrorValues = ignoredErrorsMap[nodeId] || new Set();
-    item.errors = item.errors.filter(
-      error => !ignoredErrorValues.has(error.value)
-    );
+    item.errors = item.errors.filter(error => !ignoredErrorValues.has(error.value));
     return item.errors.length >= 1;
   });
 
@@ -44,10 +36,7 @@ function BulkErrorList(props) {
     errorArray.forEach(item => {
       const nodeId = item.id;
       const ignoredErrorValues = ignoredErrorsMap[nodeId] || new Set();
-      item.errors = item.errors.filter(
-        error => !ignoredErrorValues.has(error.value)
-      );
-
+      item.errors = item.errors.filter(error => !ignoredErrorValues.has(error.value));
       item.errors.forEach(error => {
         const errorKey = `${error.type}_${error.message}_${error.value}`;
         if (bulkErrorMap[errorKey]) {
@@ -64,7 +53,7 @@ function BulkErrorList(props) {
   };
 
   const bulkErrorList = createBulkErrorList(filteredErrorArray, ignoredErrorsMap);
-  bulkErrorList.sort((a, b) => (b as any).count - (a as any).count);
+  bulkErrorList.sort((a: any, b: any) => b.count - a.count);
 
   function handleIgnoreChange(error) {
     props.onIgnoredUpdate(error);
@@ -75,42 +64,22 @@ function BulkErrorList(props) {
   }
 
   function handleSelectAll(error) {
-    parent.postMessage(
-      {
-        pluginMessage: {
-          type: "select-multiple-layers",
-          nodeArray: error.nodes
-        }
-      },
-      "*"
-    );
+    parent.postMessage({ pluginMessage: { type: "select-multiple-layers", nodeArray: error.nodes } }, "*");
   }
 
   function handleSelect(error) {
-    parent.postMessage(
-      {
-        pluginMessage: {
-          type: "fetch-layer-data",
-          id: error.node.id
-        }
-      },
-      "*"
-    );
+    parent.postMessage({ pluginMessage: { type: "fetch-layer-data", id: error.node.id } }, "*");
   }
 
   function handleIgnoreAll(error) {
     let errorsToBeIgnored = [];
-
     filteredErrorArray.forEach(node => {
       node.errors.forEach(item => {
-        if (item.value === error.value) {
-          if (item.type === error.type) {
-            errorsToBeIgnored.push(item);
-          }
+        if (item.value === error.value && item.type === error.type) {
+          errorsToBeIgnored.push(item);
         }
       });
     });
-
     if (errorsToBeIgnored.length) {
       props.onIgnoreAll(errorsToBeIgnored);
     }
@@ -136,15 +105,15 @@ function BulkErrorList(props) {
     setSelectedFilters(newSelectedFilters);
   };
 
-  const filteredErrorList = bulkErrorList.filter(error => {
-    return selectedFilters.has("All") || selectedFilters.has((error as any).type);
+  const filteredErrorList = bulkErrorList.filter((error: any) => {
+    return selectedFilters.has("All") || selectedFilters.has(error.type);
   });
 
-  const errorListItems = filteredErrorList.map((error, index) => (
+  const errorListItems = filteredErrorList.map((error: any, index) => (
     <BulkErrorListItem
       error={error}
       index={index}
-      key={`${(error as any).node.id}-${(error as any).type}-${index}`}
+      key={`${error.node.id}-${error.type}-${index}`}
       handleIgnoreChange={handleIgnoreChange}
       handleSelectAll={handleSelectAll}
       handleSelect={handleSelect}
@@ -155,12 +124,7 @@ function BulkErrorList(props) {
 
   const listVariants = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.1
-      }
-    }
+    show: { opacity: 1, transition: { delayChildren: 0.1 } }
   };
 
   const pageVariants = {
@@ -211,10 +175,7 @@ function BulkErrorList(props) {
         ) : (
           <div className="success-message">
             <div className="success-shape">
-              <img
-                className="success-icon"
-                src={require("../assets/smile.svg")}
-              />
+              <img className="success-icon" src={require("../assets/smile.svg")} />
             </div>
             All errors fixed in the selection
           </div>
