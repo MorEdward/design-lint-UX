@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState } from "react";
-
 import Navigation from "./Navigation";
 import NodeList from "./NodeList";
 import LibraryPage from "./LibraryPage";
@@ -9,7 +8,6 @@ import PreloaderCSS from "./PreloaderCSS";
 import EmptyState from "./EmptyState";
 import Panel from "./Panel";
 import BulkErrorList from "./BulkErrorList";
-
 import "../styles/figma.ds.css";
 import "../styles/ui.css";
 import "../styles/empty-state.css";
@@ -40,6 +38,7 @@ const App = ({}) => {
   const [libraries, setLibraries] = useState([]);
   const [localStyles, setLocalStyles] = useState({});
   const [stylesInUse, setStylesInUse] = useState({});
+
   const librariesRef = React.useRef([]);
   const activePageRef = React.useRef(activePage);
 
@@ -58,7 +57,7 @@ const App = ({}) => {
 
     setActiveNodeIds(activeNodeIds => {
       if (activeNodeIds.includes(id)) {
-        // Remove this node if it exists in the array already from intial run.
+        // Remove this node if it exists in the array already from initial run.
         // Don't ignore it if there's only one layer total.
         if (activeNodeIds.length !== 1) {
           return activeNodeIds.filter(activeNodeId => activeNodeId !== id);
@@ -73,7 +72,6 @@ const App = ({}) => {
 
   const updateNavigation = page => {
     setActivePage(page);
-
     parent.postMessage(
       {
         pluginMessage: {
@@ -109,6 +107,8 @@ const App = ({}) => {
     }
   };
 
+  // NOTE: updateBorderRadius is kept because it's used by the Settings panel,
+  // not the "fix errors" flow. It updates what radius values are flagged as errors.
   const updateBorderRadius = value => {
     let borderArray = [...borderRadiusValues, value];
     setBorderRadiusValues([...borderRadiusValues, value]);
@@ -144,7 +144,6 @@ const App = ({}) => {
 
   const updateLintRules = boolean => {
     setLintVectors(boolean);
-
     parent.postMessage(
       {
         pluginMessage: {
@@ -207,7 +206,7 @@ const App = ({}) => {
   }, []);
 
   // We need to always be able to access this set of arrays
-  // in order to provide it to the linting array for magic fixes.
+  // in order to provide it to the linting array.
   React.useEffect(() => {
     librariesRef.current = libraries;
   }, [libraries]);
@@ -221,6 +220,7 @@ const App = ({}) => {
 
     window.onmessage = event => {
       const { type, message, errors, storage } = event.data.pluginMessage;
+
       if (type === "show-preloader") {
         setEmptyState(false);
       } else if (type === "show-empty-state") {
@@ -228,7 +228,6 @@ const App = ({}) => {
       } else if (type === "step-1") {
         // Lint the very first selected node.
         let nodeObject = JSON.parse(message);
-
         setNodeArray(nodeObject);
         updateErrorArray(errors);
 
@@ -259,7 +258,7 @@ const App = ({}) => {
         setSelectedNode(() => JSON.parse(message));
 
         // After we have the first node, we want to
-        // lint the all the remaining nodes/layers in our original selection.
+        // lint all the remaining nodes/layers in our original selection.
         parent.postMessage(
           {
             pluginMessage: {
@@ -275,7 +274,6 @@ const App = ({}) => {
         setInitialLoad(true);
       } else if (type === "fetched storage") {
         let clientStorage = JSON.parse(storage);
-
         setIgnoreErrorArray(ignoredErrorArray => [
           ...ignoredErrorArray,
           ...clientStorage
@@ -290,7 +288,6 @@ const App = ({}) => {
         clientStorage = clientStorage.sort((a, b) => a - b);
         setBorderRadiusValues([...clientStorage]);
       } else if (type === "reset storage") {
-        // let clientStorage = JSON.parse(storage);
         setIgnoreErrorArray([]);
         parent.postMessage(
           {
@@ -364,6 +361,7 @@ const App = ({}) => {
         lintVectors={lintVectors}
         onRefreshSelection={onRunApp}
       />
+
       {activeNodeIds.length !== 0 ? (
         <div>
           {activePage === "layers" ? (
@@ -387,6 +385,10 @@ const App = ({}) => {
           ) : activePage === "styles" ? (
             <StylesPage stylesInUse={stylesInUse} />
           ) : (
+            // ── "page" view: BulkErrorList ──
+            // Removed props: none of the fix/apply-style props were in App.tsx
+            // directly — they live inside BulkErrorList itself via postMessage.
+            // See BulkErrorList.tsx patch notes for what to remove there.
             <BulkErrorList
               libraries={libraries}
               errorArray={errorArray}
@@ -411,6 +413,9 @@ const App = ({}) => {
       )}
 
       {Object.keys(activeError).length !== 0 && errorArray.length ? (
+        // ── Panel: the floating detail panel ──
+        // Removed props: none passed from App.tsx — fix button lives
+        // inside Panel.tsx itself. See Panel.tsx patch notes below.
         <Panel
           visibility={isVisible}
           node={selectedNode}
